@@ -1,8 +1,9 @@
-name: Deploy to Server
+name: Deploy to EC2
 
 on:
   push:
-    branches: [ "main" ]   # adjust if your default branch is different
+    branches:
+      - main   # or your branch
 
 jobs:
   deploy:
@@ -15,8 +16,14 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Pull latest code on server
+      - name: Deploy app
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@100.26.110.186 "cd /var/www/demo && git pull origin main"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd /var/www/demo
+            git pull origin main
+            # restart app if needed
+            # sudo systemctl restart myapp
+          EOF
+
